@@ -192,7 +192,9 @@ canary Service. List the same route name in
 `spec.strategy.canary.trafficRouting.managedRoutes`. ALB supports only
 `headerValue.exact` for this step.
 
-This example shows the relevant canary strategy fields:
+This example uses `setWeight` first so the canary has available replicas
+before the header route is applied. Requests without the header keep following
+the weighted route:
 
 ```yaml
 trafficRouting:
@@ -202,6 +204,7 @@ trafficRouting:
   managedRoutes:
     - name: preview-header
 steps:
+  - setWeight: 20
   - setHeaderRoute:
       name: preview-header
       match:
