@@ -1377,6 +1377,30 @@ read secrets in the single namespace it is installed in. In that mode, set
 `--analysis-shared-secret-namespace` to that same namespace — pointing it anywhere else will fail
 because the controller has no permission to read secrets there.
 
+## Metric condition expressions
+
+The `successCondition` and `failureCondition` fields use the
+[Expr expression language](https://expr-lang.org/docs/language-definition).
+Each expression must return a boolean. Rollouts exposes the metric provider's
+returned value as `result`. Check the provider's documentation for the shape of
+its result before writing a condition.
+
+| Result shape | Example condition |
+| --- | --- |
+| Number | `result >= 0.95` |
+| List of numbers | `len(result) > 0 && result[0] >= 0.95` |
+| Map with a simple key | `result.successRate >= 0.95` |
+| Map with punctuation in the key | `result['average.duration'] < 250` |
+
+Comparisons such as `>=` and `==` can be combined with `&&`, `||`, and `!`.
+The Expr reference lists the operators, indexing syntax, and built-in functions
+such as `len`. Rollouts also provides these helpers:
+
+- `asInt(value)` and `asFloat(value)` convert numbers and numeric strings.
+- `isNaN(value)` and `isInf(value)` check a numeric result for NaN or infinity.
+- `isNil(result)` checks for a nil result. `default(result, fallback)` supplies a
+  fallback for a nil result. Use a length check for an empty list.
+
 ## Handling Metric Results
 
 ### NaN and Infinity
