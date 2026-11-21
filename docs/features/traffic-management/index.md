@@ -105,7 +105,7 @@ Header-based traffic routing is configured using the `setHeaderRoute` step, whic
 - `regex`: Specifies a regular expression pattern to match
 - `prefix`: Specifies a prefix value to match
 
-**Note:** Not all traffic routers support all match types.
+Match support depends on the traffic router. [AWS ALB](alb.md#route-to-the-canary-by-request-header) supports only `exact` for `setHeaderRoute`.
 
 To disable header based traffic routing just need to specify empty `setHeaderRoute` with only the name of the route.
 

@@ -185,6 +185,38 @@ spec:
 
 More information can be found in the [AWS ALB API](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/sticky-sessions.html)
 
+### Route to the canary by request header
+
+Use a `setHeaderRoute` step to send requests with a matching header to the
+canary Service. List the same route name in
+`spec.strategy.canary.trafficRouting.managedRoutes`. ALB supports only
+`headerValue.exact` for this step.
+
+This example shows the relevant canary strategy fields:
+
+```yaml
+trafficRouting:
+  alb:
+    ingress: ingress
+    servicePort: 80
+  managedRoutes:
+    - name: preview-header
+steps:
+  - setHeaderRoute:
+      name: preview-header
+      match:
+        - headerName: X-Preview
+          headerValue:
+            exact: "true"
+  - pause: {}
+  - setHeaderRoute:
+      name: preview-header
+```
+
+The controller adds an Ingress rule, an ALB action forwarding matching requests
+to the canary Service, and the corresponding header condition. The final
+`setHeaderRoute` step omits `match` to remove that route.
+
 ### Zero-Downtime Updates with AWS TargetGroup Verification
 
 Argo Rollouts contains two features to help ensure zero-downtime updates when used with the AWS
