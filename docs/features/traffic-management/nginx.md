@@ -56,3 +56,24 @@ Starting with v1.5, argo rollouts supports multiple Nginx ingress controllers po
 As a default, the Argo Rollouts controller only operates on ingresses with the `kubernetes.io/ingress.class` annotation or `spec.ingressClassName` set to `nginx`. A user can configure the controller to operate on Ingresses with different class name by specifying the `--nginx-ingress-classes` flag. A user can list the `--nginx-ingress-classes` flag multiple times if the Argo Rollouts controller should operate on multiple values. This solves the case where a cluster has multiple Ingress controllers operating on different class values.
 
 If the user would like the controller to operate on any Ingress without the `kubernetes.io/ingress.class` annotation or `spec.ingressClassName`, a user should add the following `--nginx-ingress-classes ''`.
+
+## Restoring a Rollout and its Ingresses
+
+After a restore to another cluster, a generated canary Ingress can still refer to
+the Rollout's UID from the source cluster. If the controller reports
+`TrafficRoutingError` with `canary ingress … controlled by different object`,
+check the Rollout's UID and the canary Ingress's controller owner reference in
+the destination namespace:
+
+```sh
+kubectl get rollout <rollout> -n <namespace> -o jsonpath='{.metadata.uid}{"\n"}'
+kubectl get ingress <canary-ingress> -n <namespace> -o jsonpath='{.metadata.ownerReferences[?(@.controller==true)].uid}{"\n"}'
+```
+
+The two UIDs must match for the controller to update the canary Ingress. When
+planning the restore, restore the Rollout and stable Ingress and omit the
+generated canary Ingress. The controller recreates it with the destination
+Rollout's UID. If the generated Ingress has already been restored with a stale
+or missing owner reference, verify that it is the Ingress generated for this
+Rollout before removing it and letting the controller recreate it. Removing
+that Ingress temporarily removes its canary routes.
